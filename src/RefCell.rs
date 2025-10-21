@@ -21,19 +21,15 @@ impl<T> RefCell<T> {
         }
     }
 
-     pub fn borrow(&self) -> Option<&T> {
+     pub fn borrow(&self) -> Option<Ref<'_,T>> {
        match self.reference.get() {
          RefType::Unshared => {
             self.reference.set(RefType::Shared(1));
-            Some(unsafe {
-                &*self.value.get()
-            })
+            Some(Ref { refCell: self })
          }, 
          RefType::Shared(n) => {
             self.reference.set(RefType::Shared(n+1));
-            Some(unsafe {
-                &*self.value.get()
-            })
+            Some(Ref { refCell: self })
          },
          RefType::Exclusive => {
             None
@@ -41,12 +37,10 @@ impl<T> RefCell<T> {
        }
      }
 
-     pub fn borrow_mut(&self) -> Option<&mut T> {
+     pub fn borrow_mut(&self) -> Option<RefMut<'_,T>> {
         if let RefType::Unshared = self.reference.get() {
             self.reference.set(RefType::Exclusive);
-            unsafe {
-                Some(&mut *self.value.get())
-            }
+            Some(RefMut { refCell: self })
         } else {
             None
         }
