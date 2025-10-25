@@ -1,4 +1,5 @@
 use std::{cell::UnsafeCell, ops::Deref, ptr::NonNull};
+use std::marker::PhantomData;
 use crate::Cell;
 pub struct RcInner<T> {
     value: T,
@@ -6,6 +7,7 @@ pub struct RcInner<T> {
 }
 pub struct rc<T> {
     inner: NonNull<RcInner<T>>,
+    _marker: PhantomData<RcInner<T>>,
 }
 
 impl<T> rc<T> {
@@ -17,8 +19,9 @@ impl<T> rc<T> {
         rc{
             inner: unsafe {
                 NonNull::new_unchecked(Box::into_raw(inner))
+            },
+                _marker:PhantomData
             }
-        }
     }
 }
 
@@ -27,7 +30,8 @@ impl<T> Clone for rc<T>  {
        let inner = unsafe{self.inner.as_ref()};
        let c = inner.refCount.get();
        inner.refCount.set(c+1);
-       rc { inner: self.inner }
+       rc { inner: self.inner,
+    _marker:PhantomData }
     }
 }
 
